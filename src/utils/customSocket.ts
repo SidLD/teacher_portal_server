@@ -1,11 +1,11 @@
 import { Server as SocketIOServer } from 'socket.io';
-import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
 import {io as IoClient} from 'socket.io-client'
+import CONFIG from '../config/vars.js';
 let io:any; 
-const SERVER_URI = process.env.SERVER_URI as string
-const FRONT_URI = process.env.FRONT_URI as string
-const SOCKET_TOKEN = process.env.SOCKET_TOKEN as string
+const SERVER_URI = CONFIG.SOCKET.SOCKET_SERVER_URI as string
+const FRONT_URI = CONFIG.SOCKET.SOCKET_CLIENT_URI as string
+const SOCKET_TOKEN = CONFIG.SOCKET.SOCKET_TOKEN as string
 
 const allowedOrigins = [
   SERVER_URI,
@@ -16,7 +16,7 @@ console.log(allowedOrigins)
 export const initializeSocket = (server:any) => {
   io = new SocketIOServer(server, {
     cors: {
-      origin: (origin: any, callback) => {
+      origin: (origin: any, callback : any) => {
         if (allowedOrigins.includes(origin) || !origin) {
           callback(null, true);
         } else {
