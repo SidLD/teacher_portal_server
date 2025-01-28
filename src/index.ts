@@ -9,6 +9,7 @@ import CONFIG from './config/vars.js'
 import chalk from 'chalk'
 import { serve } from '@hono/node-server'
 import users from './router/userRouter.js'
+import position from './router/positionRouter.js'
 
 // Initialize the Hono app
 const app = new Hono().basePath('/api/')
@@ -28,6 +29,7 @@ app.use(
 
 app.get('/', (c) => c.text('Welcome to the API!'))
 app.route('/users', users)
+app.route('/positions', position)
 
 // ****************   END OF API     ****************
 

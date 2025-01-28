@@ -11,7 +11,7 @@ import { validator } from 'hono/validator'
 import CONFIG from '../config/vars.js'
 
 const users = new Hono()
-// User Route
+
 users.post('/register', validator('json', (value, c) => {
     const body = value['json']
     if (!body || typeof body !== 'string') {
@@ -21,8 +21,21 @@ users.post('/register', validator('json', (value, c) => {
       body: body,
     }
   }),register)
-users.get('/login', login)
+
+users.post('/login', validator('json', (value, c) => {
+    const result = z.object({
+        username: z.string().min(3, 'Username must be at least 3 characters long'),
+        password: z.string().min(6, 'Password must be at least 6 characters long'),
+    }).safeParse(value)
+    if (!result.success) {
+        c.status(400)
+        return c.json({ message: result.error.errors[0].message })
+    }
+    return result.data
+    }), login)
+
 users.get('/', protect, isAdmin, getUsers)
+
 users.post('/register-admin',
     validator('header', (value, c) => {
         const header = value['authorization']

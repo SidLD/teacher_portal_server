@@ -1,12 +1,10 @@
 import { type Context, type Next } from 'hono'
 import { Jwt } from 'hono/utils/jwt'
 import { User } from '../models/index.js'
-//
 
 // Protect Route for Authenticated Users
 export const protect = async (c: Context, next: Next) => {
   let token
-
   if (
     c.req.header('Authorization') &&
     c.req.header('Authorization')?.startsWith('Bearer')
@@ -35,8 +33,8 @@ export const protect = async (c: Context, next: Next) => {
 // Check if user is admin
 export const isAdmin = async (c: Context, next: Next) => {
   const user = c.get('user')
-
-  if (user && user.isAdmin) {
+  
+  if (user && user.role == 'ADMIN') {
     await next()
   } else {
     c.status(401)

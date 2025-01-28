@@ -7,21 +7,37 @@ import { validator } from 'hono/validator'
 import { generateCode } from '../utils/codeGenerator.js'
 
 
-/**
- * @api {get} /users Get All Users
- * @apiGroup Users
- * @access Private
- */
 export const getUsers = async (c: Context) => {
-  const users = await User.find()
-  return c.json({ users })
-}
+  try {
+    const { start = 0, limit = 10, search = "", sort = "createdAt" }: any = c.req.query;
+    const startNumber = parseInt(start as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
 
-/**
- * @api {post} /users Create User
- * @apiGroup Users
- * @access Public
- */
+    const searchCriteria = search
+      ? { name: { $regex: search, $options: "i" , role : 'USER'} } // Adjust 'name' field to match your schema
+      : { role : 'USER' };
+
+    const sortCriteria: Record<string, 1 | -1> = {};
+    if (typeof sort === "string") {
+      const sortField = sort.startsWith("-") ? sort.substring(1) : sort;
+      const sortOrder = sort.startsWith("-") ? -1 : 1;
+      sortCriteria[sortField] = sortOrder;
+    };
+
+    const users = await User.find(searchCriteria)
+      .sort(sortCriteria)
+      .skip(startNumber)
+      .limit(limitNumber);
+      
+    const totalUsers = await User.countDocuments(searchCriteria);
+
+    return c.json({ users, total: totalUsers, start: startNumber, limit: limitNumber });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return c.json({ error: "Failed to fetch users" }, 500);
+  }
+};
+
 export const register = async (c: Context) => {
   try {
     const body: IUserDoc = await c.req.json()
@@ -65,27 +81,18 @@ export const register = async (c: Context) => {
     })
   } catch (error: any) {
     c.status(400)
-    return c.json({ message: 'Something went wrong' })
+    return c.json({ message: error.message })
   }
 }
 
-/**
- * @api {post} /users/login Login User
- * @apiGroup Users
- * @access Public
- */
 export const login = async (c: Context) => {
     try {
-      const params: IUserDoc = await c.req.json() // Get user data from the request
+      const params: IUserDoc = await c.req.json() 
   
-      // Find the user by email
-      const user: IUserDoc | null = await User.findOne({ email: params.email })
+      const user: IUserDoc | null = await User.findOne({ username: params.username })
   
       if (user) {
-
-        // Use the matchPassword method to compare the entered password with the stored hash
         const isMatch = await user.matchPassword(params.password as string)
-  
         if (isMatch) {
           const payload = {
             id: user._id,
@@ -112,7 +119,7 @@ export const login = async (c: Context) => {
     } catch (error: any) {
       console.log(error.message)
       c.status(400)
-      throw new Error('Invalid Data or Email Already Taken')
+      return c.json({ message: error.message })
     }
 }
 
@@ -157,8 +164,8 @@ export const registerAdmin = async (c: Context) => {
       message: 'User created successfully',
     })
   } catch (error: any) {
-    console.log(error)
+    console.log(error.message)
     c.status(400)
-    return c.json({ message: 'Something went wrong' })
+    return c.json({ message: error.message })
   }
 }
