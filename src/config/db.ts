@@ -1,11 +1,16 @@
 // import * as mongoose from 'mongoose'
 
+import mongoose from "mongoose"
+import CONFIG from "./vars"
+import chalk from "chalk";
+
 const connectDB = async () => {
   try {
-    // Do noting;
-    
+    mongoose.set('strictQuery', false);
+    mongoose.connect(`${CONFIG.ATLAS_URI}`);
+    console.log(chalk.greenBright('Connected to Database.'));
   } catch (err: any) {
-    console.error(`Error: ${err.message}`)
+    console.error(chalk.red(`Error: ${err.message}`))
     process.exit(1)
   }
 }

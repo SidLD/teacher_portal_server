@@ -1,9 +1,11 @@
 import { type Context } from 'hono'
 import { User } from '../models/index.js'
-import bcrypt from 'bcrypt'
 import CONFIG from '../config/vars'
 import type { IUserDoc } from '../models/userModel.js'
 import jwt from 'jsonwebtoken' 
+import { validator } from 'hono/validator'
+import { generateCode } from '../utils/codeGenerator.js'
+
 
 /**
  * @api {get} /users Get All Users
@@ -35,16 +37,16 @@ export const register = async (c: Context) => {
       c.status(400)
       throw new Error('User already exists')
     }
-
+    const code = await generateCode(c);
     const newUser = await User.create({
       username: body.username,
       email: body.email,
-      role: body.role,
+      role: 'USER',
       password: body.password,
-      code: body.code,
+      code,
       birthday: body.birthday,
       address: body.address,
-      educational_attainment: body.educational_attainment,
+      educational_attainment: body.educational_attainment ,
       position: body.position,
       contact: body.contact,
     })
@@ -112,4 +114,51 @@ export const login = async (c: Context) => {
       c.status(400)
       throw new Error('Invalid Data or Email Already Taken')
     }
+}
+
+export const registerAdmin = async (c: Context) => {
+  try {
+    const body: IUserDoc = await c.req.json()
+    const user: IUserDoc | null = await User.findOne({ 
+      $or : [
+        {email: body.email},
+        {username: body.username}
+      ]
+     })
+
+    if (user) {
+      c.status(400)
+      throw new Error('User already exists')
+    }
+    const code = await generateCode(c);
+    const newUser = await User.create({
+      username: body.username,
+      email: body.email,
+      role: body.role,
+      password: body.password,
+      code,
+      birthday: null,
+      address: null,
+      educational_attainment: null,
+      position: null,
+      contact: null,
+    })
+    const payload = {
+        id: newUser._id,
+        role: newUser.role,
+        username: newUser.username,
+      }
+    const token = jwt.sign(payload, CONFIG.JWT_SECRET, { expiresIn: '12h' })
+
+    return c.json({
+      success: true,
+      data: newUser,
+      token,
+      message: 'User created successfully',
+    })
+  } catch (error: any) {
+    console.log(error)
+    c.status(400)
+    return c.json({ message: 'Something went wrong' })
   }
+}

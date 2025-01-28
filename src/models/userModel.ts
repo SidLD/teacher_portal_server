@@ -28,12 +28,12 @@ const userSchema = new Schema<IUserDoc>(
     email:                  { type: String, required: true, unique: true },
     password:               { type: String, required: false },
     code:                   { type: String, required: true, unique: true },
-    birthday:               {type: Date, required: true},
-    address:                { type: String, required: true },
-    educational_attainment: { type: String, required: true },
-    position:               { type: String, required: true, ref: 'Position' },
-    role:                   { type: String, required: true, default: 'USER' },
-    contact:                { type: String, required: true, unique: true },
+    birthday:               { type: Date  },
+    address:                { type: String},
+    educational_attainment: { type: String},
+    position:               { type: String, ref: 'Position' },
+    role:                   { type: String, default: 'USER' },
+    contact:                { type: String, unique: true },
     
   },
   {
@@ -49,8 +49,7 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next()
   }
-
-  this.password = await bcrypt.hash(this.password as string, CONFIG.JWT_SECRET )
+  this.password = await bcrypt.hash(this.password as string, 10 )
 })
 
 const User = model('User', userSchema)
