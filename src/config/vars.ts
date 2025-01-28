@@ -1,7 +1,10 @@
-require('dotenv').config({ path: `.env.development` });
+import chalk from "chalk";
 
+require('dotenv').config({path: '.env'})
+const deployment = process.env.NODE_ENV || 'development';
+require('dotenv').config({ path: `.env.${deployment}` });
 const CONFIG = {
-	env: process.env.NODE_ENV,
+	env: deployment,
 	PORT: process.env.PORT || 8888,
 	DB_HOST: process.env.DB_HOST || '127.0.0.1',
 	DB_PORT: process.env.DB_PORT || '27017',
@@ -20,3 +23,4 @@ const CONFIG = {
 	ID_SIZE: process.env.ID_SIZE as unknown as number || 4 as number
 };
 export default CONFIG;
+console.log(chalk.yellowBright(`You are running in ${deployment} Mode`))
