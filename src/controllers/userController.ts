@@ -54,11 +54,17 @@ export const register = async (c: Context) => {
       throw new Error('Email is required')
     }
 
-    const user: IUserDoc | null = await User.findOne({ email: formData.email })
+    const user: IUserDoc | null = await User.findOne({
+      $or: [
+        { email: formData.email },
+        { username: formData.username }, 
+        { contact: formData.contact }
+      ]
+    })
 
     if (user) {
       c.status(400)
-      throw new Error('User already exists')
+      throw new Error('Email, Username or Contact already in used by other User.')
     }
 
     let fileId = null;
@@ -89,7 +95,7 @@ export const register = async (c: Context) => {
 
     return c.json({
       success: true,
-      data: {...newUser, password:undefined},
+      data: {user:newUser, password:undefined},
       code,
       token,
       message: 'User created successfully',
