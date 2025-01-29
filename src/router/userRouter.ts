@@ -12,15 +12,7 @@ import CONFIG from '../config/vars.js'
 
 const users = new Hono()
 
-users.post('/register', validator('json', (value, c) => {
-    const body = value['json']
-    if (!body || typeof body !== 'string') {
-      return c.text('Invalid!', 400)
-    }
-    return {
-      body: body,
-    }
-  }),register)
+users.post('/register', register)
 
 users.post('/login', validator('json', (value, c) => {
     const result = z.object({

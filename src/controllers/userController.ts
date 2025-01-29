@@ -1,11 +1,11 @@
 import { type Context } from 'hono'
 import { User } from '../models/index.js'
 import CONFIG from '../config/vars'
-import type { IUserDoc } from '../models/userModel.js'
+import type { IUser, IUserDoc } from '../models/userModel.js'
 import jwt from 'jsonwebtoken' 
-import { validator } from 'hono/validator'
 import { generateCode } from '../utils/codeGenerator.js'
-
+import { uploadFile } from '../service/bucket.js'
+import { IFile } from '../models/fileMode.js'
 
 export const getUsers = async (c: Context) => {
   try {
@@ -40,42 +40,57 @@ export const getUsers = async (c: Context) => {
 
 export const register = async (c: Context) => {
   try {
-    const body: IUserDoc = await c.req.json()
+    const body:FormData =  await c.req.formData()
+    const rawData = Object.fromEntries(body.entries()); 
+    
+    const formData: Partial<IUser> = {
+      ...rawData,
+      role: rawData.role as "USER" | "ADMIN" ?? "USER",
+      file: body.get('file[]') as any
+    };
 
-    if (!body.email) {
+    if (!formData.email) {
       c.status(400)
       throw new Error('Email is required')
     }
 
-    const user: IUserDoc | null = await User.findOne({ email: body.email })
+    const user: IUserDoc | null = await User.findOne({ email: formData.email })
 
     if (user) {
       c.status(400)
       throw new Error('User already exists')
     }
+
+    let fileId = null;
+    if(formData.file){
+        fileId = await uploadFile(formData.file as any as File, `${formData.username}-${new Date()}`)
+    }
+
     const code = await generateCode(c);
     const newUser = await User.create({
-      username: body.username,
-      email: body.email,
+      username: formData.username,
+      email: formData.email,
       role: 'USER',
-      password: body.password,
+      password: formData.password ? formData.password : 'password',
       code,
-      birthday: body.birthday,
-      address: body.address,
-      educational_attainment: body.educational_attainment ,
-      position: body.position,
-      contact: body.contact,
+      birthday: formData.birthday,
+      address: formData.address,
+      educational_attainment: formData.educational_attainment ,
+      position: formData.position,
+      contact: formData.contact,
+      file: fileId? fileId._id : null,
     })
     const payload = {
-        id: newUser._id,
-        role: newUser.role,
-        username: newUser.username,
-      }
+      id: newUser._id,
+      role: newUser.role,
+      username: newUser.username,
+    }
     const token = jwt.sign(payload, CONFIG.JWT_SECRET, { expiresIn: '12h' })
 
     return c.json({
       success: true,
-      data: newUser,
+      data: {...newUser, password:undefined},
+      code,
       token,
       message: 'User created successfully',
     })

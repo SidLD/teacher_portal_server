@@ -20,7 +20,16 @@ const CONFIG = {
 		SOCKET_SERVER_URI: process.env.SOCKET_SERVER_URI,
 		SOCKET_CLIENT_URI: process.env.SOCKET_CLIENT_URI,
 	},
-	ID_SIZE: process.env.ID_SIZE as unknown as number || 4 as number
+	ID_SIZE: process.env.ID_SIZE as unknown as number || 4 as number,
+	FIREBASE: {
+		apiKey: process.env.apiKey,
+		authDomain: process.env.authDomain,
+		projectId: process.env.projectId,
+		storageBucket: process.env.storageBucket,
+		messagingSenderId: process.env.messagingSenderId,
+		appId: process.env.appId,
+		measurementId: process.env.measurementId, 
+	}
 };
 export default CONFIG;
 console.log(chalk.yellowBright(`You are running in ${deployment} Mode`))

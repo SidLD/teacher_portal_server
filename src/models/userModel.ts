@@ -1,8 +1,8 @@
 import {  Schema, model } from 'mongoose'
 import bcrypt from 'bcrypt';
-import CONFIG from '../config/vars';
+import { IFile } from './fileMode';
 
-interface IUser {
+export interface IUser {
   matchPassword(arg0: string): unknown;
   status: string;
   _id?: string
@@ -16,6 +16,7 @@ interface IUser {
   position: string
   role: 'ADMIN'| 'USER'
   password?: string
+  file?: IFile
 }
 
 export interface IUserDoc extends IUser, Document {
@@ -34,6 +35,7 @@ const userSchema = new Schema<IUserDoc>(
     position:               { type: String, ref: 'Position' },
     role:                   { type: String, default: 'USER' },
     contact:                { type: String, unique: true },
+    file:                   { type: String, ref: 'File' },
     
   },
   {
