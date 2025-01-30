@@ -9,12 +9,11 @@ import { IFile } from '../models/fileMode.js'
 
 export const getUsers = async (c: Context) => {
   try {
-    const { start = 0, limit = 10, search = "", sort = "createdAt" }: any = c.req.query;
+    const { start = 0, limit = 10, search = "", sort = "createdAt" }: any = c.req.queries();
     const startNumber = parseInt(start as string, 10);
     const limitNumber = parseInt(limit as string, 10);
-
     const searchCriteria = search
-      ? { name: { $regex: search, $options: "i" , role : 'USER'} } // Adjust 'name' field to match your schema
+      ? { username: search, role : 'USER'}  // Adjust 'name' field to match your schema
       : { role : 'USER' };
 
     const sortCriteria: Record<string, 1 | -1> = {};
@@ -27,7 +26,9 @@ export const getUsers = async (c: Context) => {
     const users = await User.find(searchCriteria)
       .sort(sortCriteria)
       .skip(startNumber)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .select('-password')
+      .populate('file');
       
     const totalUsers = await User.countDocuments(searchCriteria);
 
