@@ -10,7 +10,7 @@ export const getPositions = async (c: Context) => {
 
 export const createPosition = async (c: Context) => {
     try {
-        const {name, type}: IPosition = await c.req.json()
+        const { name, type }: IPosition = await c.req.json()
  
         const positionExist = await Position.findOne({name})
         if(positionExist){
@@ -31,12 +31,13 @@ export const createPosition = async (c: Context) => {
 export const updatePosition = async (c: Context) => {
    try {
         const { positionId } = c.req.param()
-        const {name, type}: IPosition = await c.req.json()
+        const {name, type}:IPosition  = await c.req.json()
         const position = await Position.findByIdAndUpdate(positionId, {
             name, type
-        }, )
+        })
         return c.json({ position })
     } catch (err:any) {
+        console.log(err)
         c.status(400)
         return c.json({ message: err.message })
     } 

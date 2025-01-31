@@ -4,7 +4,8 @@ import {
   getUsers, 
   register, 
   login, 
-  registerAdmin
+  registerAdmin,
+  deleteUser
 } from '../controllers/userController.js'
 import { z } from 'zod'
 import { validator } from 'hono/validator'
@@ -49,5 +50,8 @@ users.post('/register-admin',
         }
     return result.data
 }), registerAdmin)
+
+users.delete('/:userId', protect, isAdmin ,deleteUser)
+
 users.post('/populate-seeder', protect, isAdmin, getUsers)
 export default users

@@ -19,18 +19,17 @@ position.post('/', protect, isAdmin, validator('json', (value, c) => {
     
     return result.data
 }), createPosition)
-position.put('/', protect, isAdmin, validator('json', (value, c) => {
+position.put('/:positionId', protect, isAdmin, validator('json', (value, c) => {
     const result = z.object({
         type: z.enum(['TEACHING', 'NON_TEACHING']),
-        name: z.string().min(3, 'Name must atleat have 3 length')
+        name: z.string().min(3, 'Name must atleast have 3 length')
     }).safeParse(value)
     if (!result.success) {
         c.status(400)
         return c.json({ message: result.error.errors[0].message })
     }
-    
     return result.data
 }), updatePosition)
 
-position.delete('/', deletePosition)
+position.delete('/:positionId',  protect, isAdmin, deletePosition)
 export default position

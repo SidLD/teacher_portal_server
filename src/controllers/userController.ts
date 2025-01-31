@@ -9,20 +9,18 @@ import { IFile } from '../models/fileMode.js'
 
 export const getUsers = async (c: Context) => {
   try {
-    const { start = 0, limit = 10, search = "", sort = "createdAt" }: any = c.req.queries();
+    const { start = 0, limit = 10, search = "", sort = "createdAt" }: any = c.req.query();
     const startNumber = parseInt(start as string, 10);
     const limitNumber = parseInt(limit as string, 10);
     const searchCriteria = search
-      ? { username: search, role : 'USER'}  // Adjust 'name' field to match your schema
+      ? { username: search, role : 'USER'} 
       : { role : 'USER' };
-
     const sortCriteria: Record<string, 1 | -1> = {};
     if (typeof sort === "string") {
       const sortField = sort.startsWith("-") ? sort.substring(1) : sort;
       const sortOrder = sort.startsWith("-") ? -1 : 1;
       sortCriteria[sortField] = sortOrder;
     };
-
     const users = await User.find(searchCriteria)
       .sort(sortCriteria)
       .skip(startNumber)
@@ -47,7 +45,7 @@ export const register = async (c: Context) => {
     const formData: Partial<IUser> = {
       ...rawData,
       role: rawData.role as "USER" | "ADMIN" ?? "USER",
-      file: body.get('file[]') as any
+      file: body.get('file') as any
     };
 
     if (!formData.email) {
@@ -67,7 +65,7 @@ export const register = async (c: Context) => {
       c.status(400)
       throw new Error('Email, Username or Contact already in used by other User.')
     }
-
+    console.log(formData.file)
     let fileId = null;
     if(formData.file){
         fileId = await uploadFile(formData.file as any as File, `${formData.username}-${new Date()}`)
@@ -191,3 +189,16 @@ export const registerAdmin = async (c: Context) => {
     return c.json({ message: error.message })
   }
 }
+
+export const deleteUser = async (c: Context) => {
+  try {
+    const { userId }: any = c.req.param();
+   
+    const deletedUser = await User.deleteOne({_id: userId})
+
+    return c.json(deletedUser);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return c.json({ error: "Failed to fetch users" }, 500);
+  }
+};
