@@ -26,7 +26,8 @@ export const getUsers = async (c: Context) => {
       .skip(startNumber)
       .limit(limitNumber)
       .select('-password')
-      .populate('file');
+      .populate('file')
+      .populate('position');
       
     const totalUsers = await User.countDocuments(searchCriteria);
 
